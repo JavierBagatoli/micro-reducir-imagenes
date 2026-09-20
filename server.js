@@ -13,18 +13,27 @@ await app.register(multipart, {
   },
 });
 
-function generateCode() {
-  return crypto.randomBytes(4).toString("base64url").slice(0, 6);
-}
-
 const MAX_SIZE = 1024 * 1024;
+
+app.get("/health", async () => {
+  return {
+    status: "ok",
+    service: "image-compressor",
+  };
+});
 
 app.post("/compress", async (request, reply) => {
   const file = await request.file();
 
   if (!file) {
     return reply.code(400).send({
-      error: "image is required",
+      error: "La imagen es requerida",
+    });
+  }
+
+  if (!file.mimetype.startsWith("image/")) {
+    return reply.code(400).send({
+      error: "El archivo no es una imagen",
     });
   }
 
@@ -50,12 +59,12 @@ app.post("/compress", async (request, reply) => {
         .toBuffer();
 
       if (output.length <= MAX_SIZE) {
-        const newNema = `${file.filename.split(".")[0]}_${Math.round(Math.random() * 10000)}.webp`;
+        const newNema = `${file.filename.split(".")[0].replace(/[^a-zA-Z0-9_-]/g, "_")}_${Math.round(Math.random() * 10000)}.webp`;
 
         return reply
           .header("Content-Type", "image/webp")
           .header("Content-Length", output.length)
-          .header("Content-Disposition", `attachment; filename=${newNema}`)
+          .header("Content-Disposition", `attachment; filename="${newNema}"`)
           .send(output);
       }
 
