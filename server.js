@@ -23,7 +23,6 @@ app.get("/health", async () => {
 });
 
 app.post("/api/compress", async (request, reply) => {
-  console.log(request, reply);
   const file = await request.file();
 
   if (!file) {
